@@ -48,9 +48,6 @@ use Aws\S3\Exception\S3Exception;
 use Aws\Sns\SnsClient;
 use Aws\Sqs\SqsClient;
 
-use Doctrine\Common\Cache\FilesystemCache;
-use Guzzle\Cache\DoctrineCacheAdapter;
-
 function getJson($url)
 {
 	$curl = curl_init($url);
@@ -183,10 +180,10 @@ function getArt($albums, $quality)
 	 */
 	$i = 0;
 	$artUrl = null;
-	$sqs = SqsClient::factory(array(
-		'credentials.cache' => $cache,
-		'region' => 'eu-west-1'
-	));
+	$sqs = new SqsClient([
+		'region' => 'eu-west-1',
+        'version' => 'latest'
+	]);
 
 	
 	foreach($albums as $album)
@@ -206,10 +203,10 @@ function getArt($albums, $quality)
 		
 		try
 		{	
-			$result = $sqs->sendMessage(array(
+			$result = $sqs->sendMessage([
 				'QueueUrl' => 'https://sqs.eu-west-1.amazonaws.com/346795263809/lastfm-albums',
 				'MessageBody' => json_encode($artUrl[$i])
-			));
+			]);
 		}
 		catch(Exception $e)
 		{
@@ -248,10 +245,10 @@ if(!isset($config))
 	$config['api_key'] = getenv("api_key");
 }
 
-$cache = new DoctrineCacheAdapter(new FilesystemCache('/tmp/cache'));
-$s3 = S3Client::factory(array(
-			'credentials.cache' => $cache,
-			'region' => 'eu-west-1'));
+$s3 = new S3Client([
+    'region' => 'eu-west-1',
+    'version' => 'latest'
+]);
 
 
 $url = "http://".$_SERVER['HTTP_HOST'].$_SERVER['REQUEST_URI']; 
@@ -287,14 +284,14 @@ if(isset($infoJson->{"error"}))
 	header("Content-Type: image/png");
 	error_log($infoJson->{"message"}." - ".$request['user']);
 	imagepng(errorImage($infoJson->{"message"}));
-	$sns = SnsClient::factory(array(
-				'credentials.cache' => $cache,
-				'region' => 'eu-west-1'));
-	$sns->publish(array(
-				'TopicArn' => 'arn:aws:sns:eu-west-1:346795263809:LastFM-Errors',
-				'Message' => $infoJson->{"message"}." - ".$request['user'],
-				'Subject' => "Lastfm Error: ".$infoJson->{"error"}
-				));
+	$sns = new SnsClient([
+        'region' => 'eu-west-1'
+    ]);
+	$sns->publish([
+        'TopicArn' => 'arn:aws:sns:eu-west-1:346795263809:LastFM-Errors',
+        'Message' => $infoJson->{"message"}." - ".$request['user'],
+        'Subject' => "Lastfm Error: ".$infoJson->{"error"}
+    ]);
 
 	return;
 }

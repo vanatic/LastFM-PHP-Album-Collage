@@ -1,7 +1,7 @@
 {
 	"require": {
 		"ext-gd": "*",
-			"aws/aws-sdk-php": "2.*",
+			"aws/aws-sdk-php": "3.*",
 			"monolog/monolog": "~1.1",
 			"doctrine/orm": "*"
 	},
