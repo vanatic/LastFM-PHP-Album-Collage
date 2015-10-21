@@ -400,8 +400,6 @@ $result = $s3->putObject(array(
 	  'CacheControl'	=>	'max-age=16400'
       ));
 
-//delete file
-unlink($filename);
 //Free resources
 imagedestroy($image);
 ?>
